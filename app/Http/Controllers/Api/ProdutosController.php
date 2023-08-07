@@ -48,4 +48,47 @@ class ProdutosController extends Controller
             ], 404);
         }
     }
+
+
+    public function update(StoreUpdateProdutoRequest $request, $id)
+    {
+        try {
+            Marcas::findorfail($request->mrc_id);
+
+            $prd = Produtos::find($id);
+            if (!$prd) {
+                return response()->json(
+                    "Produto não encontrado com id:" . $id
+                );
+            }
+
+            $prd->update($request->all());
+            return response()->json(
+                "produto alterado com sucesso !!"
+            );
+        } catch (ModelNotFoundException $e) {
+            return response([
+                'status' => 'ERROR',
+                'error' => 'marca não encontrada com id:' . $request->mrc_id,
+            ], 404);
+        }
+    }
+
+
+    public function destroy($id)
+    {
+        try {
+             Produtos::findorfail($id)->delete();
+             return response()->json(
+                "produto excluido com sucesso"
+            );
+        } catch (ModelNotFoundException $e) {
+            return response([
+                'status' => 'ERROR',
+                'error' => 'produto não encontrada com id:' . $id,
+            ], 404);
+        }
+
+    }
+
 }
