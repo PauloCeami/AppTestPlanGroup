@@ -10,6 +10,8 @@ class Marcas extends Model
     use HasFactory;
 
     protected $primaryKey = 'mrc_id';
+
+    protected $fillable = ['mrc_nome' ];
    
 
     public function produtos()
