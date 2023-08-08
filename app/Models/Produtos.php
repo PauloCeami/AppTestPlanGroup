@@ -10,7 +10,7 @@ class Produtos extends Model
     use HasFactory;
 
     protected $primaryKey = 'prd_id';
-    protected $fillable = ['prd_nome', 'prd_descricao','mrc_id'];
+    protected $fillable = ['prd_nome', 'prd_descricao', 'mrc_id'];
 
 
     /**
@@ -18,7 +18,7 @@ class Produtos extends Model
      */
     public function marca()
     {
-        return $this->hasOne(Marcas::class, 'mrc_id');
+        return $this->belongsTo(Marcas::class);
     }
 
 

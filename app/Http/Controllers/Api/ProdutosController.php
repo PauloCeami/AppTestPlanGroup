@@ -4,33 +4,44 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUpdateProdutoRequest;
-
 use App\Http\Resources\ProdutoResource;
 use App\Models\Marcas;
 use App\Models\Produtos;
+use App\Services\MarcaService;
+use App\Services\ProdutoService;
+use Exception;
 use \Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Http\Request;
 
 class ProdutosController extends Controller
 {
-    public function index()
+
+    protected $serviceProduto;
+    protected $serviceMarcas;
+
+    public function __construct(ProdutoService $prdService, MarcaService $marcaService)
     {
-        return ProdutoResource::collection(Produtos::all());
+        $this->serviceProduto = $prdService;
+        $this->serviceMarcas = $marcaService;
     }
 
+    public function index()
+    {
+        $produtos = $this->serviceProduto->getAllProdutos();
+        return ProdutoResource::collection($produtos);
+    }
 
     public function store(StoreUpdateProdutoRequest $request)
     {
         try {
-            Marcas::findorfail($request->mrc_id);
-            Produtos::create($request->validated());
+            $this->serviceMarcas->getMarca($request->mrc_id);
+            $this->serviceProduto->createNewProduto($request->validated());
             return response()->json(
                 "produto cadastrado com sucesso !!"
             );
         } catch (ModelNotFoundException $e) {
             return response([
                 'status' => 'ERROR',
-                'error' => 'marca não encontrada com id:' . $request->mrc_id,
+                'error' => 'marca não encontrada, verifique... [' . $e->getMessage() . ']',
             ], 404);
         }
     }
@@ -39,7 +50,7 @@ class ProdutosController extends Controller
     public function show($id)
     {
         try {
-            $prd = Produtos::findorfail($id);
+            $prd = $this->serviceProduto->getProduto($id);
             return new ProdutoResource($prd);
         } catch (ModelNotFoundException $e) {
             return response([
@@ -53,23 +64,16 @@ class ProdutosController extends Controller
     public function update(StoreUpdateProdutoRequest $request, $id)
     {
         try {
-            Marcas::findorfail($request->mrc_id);
-
-            $prd = Produtos::find($id);
-            if (!$prd) {
-                return response()->json(
-                    "Produto não encontrado com id:" . $id
-                );
-            }
-
+            $this->serviceMarcas->getMarca($request->mrc_id);
+            $prd = $this->serviceProduto->getProduto($id);
             $prd->update($request->all());
             return response()->json(
                 "produto alterado com sucesso !!"
             );
         } catch (ModelNotFoundException $e) {
             return response([
-                'status' => 'ERROR',
-                'error' => 'marca não encontrada com id:' . $request->mrc_id,
+                'status' => 'ERROR ',
+                'error' => 'erro ao atualizar o produto, verifique... [' . $e->getMessage() . ']',
             ], 404);
         }
     }
@@ -78,14 +82,14 @@ class ProdutosController extends Controller
     public function destroy($id)
     {
         try {
-             Produtos::findorfail($id)->delete();
-             return response()->json(
+            $this->serviceProduto->deleteProduto($id);
+            return response()->json(
                 "produto excluido com sucesso"
             );
         } catch (ModelNotFoundException $e) {
             return response([
                 'status' => 'ERROR',
-                'error' => 'produto não encontrada com id:' . $id,
+                'error' => 'erro ao excluir o produto, verifique... [' . $e->getMessage() . ']',
             ], 404);
         }
 
