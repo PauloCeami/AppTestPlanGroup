@@ -6,23 +6,33 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUpdateMarcaRequest;
 use App\Http\Resources\MarcaResource;
 use App\Models\Marcas;
+use App\Services\MarcaService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
 class MarcasController extends Controller
 {
 
+
+    protected $serviceMarcas;
+
+    public function __construct(MarcaService $marcaService)
+    {
+        $this->serviceMarcas = $marcaService;
+    }
+
     public function index()
     {
-        return MarcaResource::collection(Marcas::all());
+        $marcas = $this->serviceMarcas->getAllMarcas();
+        return MarcaResource::collection($marcas);
     }
 
 
     public function store(StoreUpdateMarcaRequest $request)
     {
-        Marcas::create($request->validated());
+        $this->serviceMarcas->createNewMarca($request->validated());
         return response()->json(
-            "marca cadastrado com sucesso !!"
+            "marca cadastrada com sucesso !!"
         );
     }
 
@@ -30,7 +40,7 @@ class MarcasController extends Controller
     public function show($id)
     {
         try {
-            $marca = Marcas::findorfail($id);
+            $marca = $this->serviceMarcas->getMarca($id);
             return new MarcaResource($marca);
         } catch (ModelNotFoundException $e) {
             return response([
@@ -44,10 +54,10 @@ class MarcasController extends Controller
     public function update(StoreUpdateMarcaRequest $request, $id)
     {
         try {
-            $marca = Marcas::findorfail($id);
+            $marca = $this->serviceMarcas->getMarca($id);
             $marca->update($request->all());
             return response()->json(
-                "marca alterado com sucesso !!"
+                "marca alterada com sucesso !!"
             );
         } catch (ModelNotFoundException $e) {
             return response([
@@ -61,7 +71,7 @@ class MarcasController extends Controller
     public function destroy($id)
     {
         try {
-            Marcas::findorfail($id)->delete();
+            $this->serviceMarcas->deleteMarca($id);
             return response()->json(
                 "marca excluida com sucesso"
             );
