@@ -24,13 +24,12 @@ class StoreUpdateProdutoRequest extends FormRequest
      */
     public function rules()
     {
-        $prd = Produtos::find($this->segment(3));
         return [
             'prd_nome' => [
                 'required',
                 'min:4',
                 'max:50',
-                Rule::unique('produtos')->ignore($prd)
+                'unique:produtos'
             ],
             'prd_descricao' => [
                 'required',
